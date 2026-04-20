@@ -1,0 +1,9 @@
+torch
+torchvision
+pandas
+numpy
+matplotlib
+Pillow
+gradio
+tqdm
+ipywidgets
