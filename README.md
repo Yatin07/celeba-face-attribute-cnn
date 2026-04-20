@@ -76,7 +76,7 @@ You can dynamically evaluate all checkpoints compiled across this project's life
 | **Dwayne Johnson** (Bald) | 5/5 expected | 3/5 expected | **5/5 expected** *(18 attrs total)* |
 | **Shraddha Kapoor** (Makeup) | 6/6 expected | 5/6 expected | **6/6 expected** *(19 attrs total)* |
 | **Older Bald Male** | 4/5 expected | 1/5 expected ❌ | **5/5 expected** *(11 attrs total)* |
-| **Young Indian Male** | 5/7 expected | 7/7 expected | **7/7 expected** *(16 attrs total)* |
+| **MY IMAGE** | 5/7 expected | 7/7 expected | **7/7 expected** *(16 attrs total)* |
 
 > **Key Takeaway:** You can clearly see Stage 2's conservative flaw (missing that the older man was bald entirely!). Stage 3 completely remedies this through `AdamW` and heavy data augmentation, catching every single expected attribute perfectly.
 
