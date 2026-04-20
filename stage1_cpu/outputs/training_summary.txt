@@ -1,0 +1,13 @@
+==================================================
+  TRAINING FINAL SUMMARY
+==================================================
+  Stage          : stage1
+  Best Epoch     : 14
+  Best Val Loss  : 0.2169
+  Best Val Acc   : 90.55%
+  Total Epochs   : 15  (all 15 epochs completed)
+  Total Time     : 05:06:32
+--------------------------------------------------
+  Best model     : checkpoints\best_model_stage1.pth
+  Training log   : outputs\training_log.csv
+==================================================

@@ -1,0 +1,12 @@
+# Core — must be installed
+torch>=2.0.0
+pandas
+Pillow
+tqdm
+matplotlib
+numpy
+ipywidgets      # For tqdm.notebook progress bars
+
+# NOTE: torchvision is NOT strictly required by the notebook source.
+# For RTX 4070 users, ensure you have the CUDA version of torch:
+# pip install torch --index-url https://download.pytorch.org/whl/cu118 (or cu121)

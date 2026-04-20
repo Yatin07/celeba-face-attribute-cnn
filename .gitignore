@@ -1,0 +1,72 @@
+# ==============================================================================
+# Python & Environment
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.env
+.venv
+venv/
+ENV/
+
+# ==============================================================================
+# Model Outputs and Checkpoints (except those committed)
+# ==============================================================================
+# We want to KEEP the important final models, so we do NOT globally ignore *.pth
+# But we DO want to ignore heavy non-essential data.
+*.npy
+!stage3_gpu_single/outputs/*.npy
+
+# Ignore all extra output text logs and old comparison logs at root
+model_comparison_output.txt
+
+# ==============================================================================
+# Heavy Dataset Files (CRITICAL!)
+# ==============================================================================
+# Never commit the image dataset or raw archives
+img_align_celeba/
+*.7z
+*.zip
+*.tar
+*.gz
+*.whl
+
+# Ignore original drive download folder if it exists
+drive-download*/
+
+# Ignore old backup project directories
+CelebA_Project/
+
+# ==============================================================================
+# Jupyter Notebooks
+# ==============================================================================
+.ipynb_checkpoints
+
+# ==============================================================================
+# OS Generated Files
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini

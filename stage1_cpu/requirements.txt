@@ -1,0 +1,8 @@
+# Core — must be installed
+torch>=2.0.0
+pandas
+Pillow
+tqdm
+matplotlib
+numpy
+ipywidgets      # For tqdm.notebook progress bars
