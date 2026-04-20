@@ -31,7 +31,7 @@ celeba-journey-cpu-to-gpu/
 
 ### Phase 1: `stage1_cpu/` (The Proof of Concept)
 * **The Goal**: Validate the `Dataset` processing logic, attribute mapping, and Custom CNN forward-passes locally without the luxury of GPU hardware.
-* **The Problem**: Passing a 3GB dataset of 202,599 high-res images through a neural network on a local CPU takes days.
+* **The Problem**: Passing a 1.3GB dataset of 202,599 high-res images through a neural network on a local CPU takes days.
 * **The Solution**: We implemented a heavy bottleneck. The `DataLoader` was clamped to a **50,000 image subset**, images were drastically downscaled to **128x128px**, and we designed `SimpleCNN_CPU`, a lightweight architecture with only ~400k parameters.
 * **The Result**: Achieved **90.55% validation accuracy** after an arduous **5-hour** training run. The model could detect broad traits (*Male*, *Smiling*), but failed completely on nuanced features (*Goatee*, *Arched Eyebrows*) due to the limited visual data.
 
@@ -85,7 +85,7 @@ You can dynamically evaluate all checkpoints compiled across this project's life
 ## 💻 How to Run Locally
 
 ### 1. Download the Dataset
-The raw images are NOT included in this repository (it's 3GB). 
+The raw images are NOT included in this repository (it's around 1.3GB). 
 You must download the `img_align_celeba.zip` package from the [Official CelebA Repository](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html), and extract it to a folder on your machine (e.g. `C:\img_align_celeba`).
 
 ### 2. Run the Comparison Benchmark
