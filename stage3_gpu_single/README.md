@@ -29,8 +29,10 @@ Instead of juggling 5 different Python modular scripts, everything was deliberat
 
 ### 📄 Core Code Files
 * **`celeba_full_gpu_training.py`**: The master 680-line Python script. It handles everything: configurations, `DataFrame` parsing, the PyTorch `Dataset` class object, the `SimpleCNN` network declaration, validation threshold tuning, and the overarching training loop.
+* **`app.py`**: A deployment-ready **Gradio Web UI**. This script instantly loads the optimized Stage 3 `best_model_gpu.pth` checkpoint, launches a local web server on port 7860, and provides a polished interface allowing users to upload faces and see a dynamic 40-attribute bar-chart prediction.
+* **`predict_single_image.py`**: A robust command-line deployment tool built for quick local inference testing. Run it by passing an image path (`python predict_single_image.py my_face.jpg`) and it will natively output a matplotlib visualization along with the top 10 highest confidence attribute predictions.
 * **`CelebA_Training_Notebook.ipynb`**: A beautifully documented equivalent of the master script, broken down cell-by-cell with markdown for interactive learning. 
-  * *Note on Notebook Issues:* During early development, the notebook's training loop crashed with an `ImportError: IProgress not found`. This occurred because the interactive `tqdm` progress bar required the `ipywidgets` library, which is typically missing from base headless PyTorch environments. We resolved this by migrating back to a standard text-based progress output to ensure the notebook runs cleanly out-of-the-box anywhere and it was having num_workers issues which causes low data loading during training so not efficient in .ipynb.
+  * *Note on Notebook Issues:* During early development, the notebook's training loop crashed with an `ImportError: IProgress not found`. This occurred because the interactive `tqdm` progress bar required the `ipywidgets` library, which is typically missing from base headless PyTorch environments. We resolved this by migrating back to a standard text-based progress output to ensure the notebook runs cleanly out-of-the-box anywhere.
 
 ### 📁 Generated Output Directories
 * **`checkpoints/`**: The active weight checkpoint directory.
