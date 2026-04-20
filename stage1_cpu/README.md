@@ -20,12 +20,28 @@ Training 202,599 high-resolution images across 40 distinct labels locally on a C
    * **Parameters:** `399,176` total parameters.
    * **Model File Size:** The saved `best_model_stage1.pth` is roughly `4.59 MB` (which includes the state_dict of the Adam optimizer).
 
-## 🗂️ The Modular Engineering
-The codebase is strictly modular to enforce clean engineering practices:
-* **`config.py`**: The single source of truth for paths, learning rates, epochs, and toggles.
-* **`dataset.py`**: A memory-efficient custom PyTorch Dataset that loads images *one by one* from the disk (via PIL) only when `__getitem__` is called, rather than holding 50k tensors in RAM. Implements simple horizontal flipping.
-* **`train.py`**: The central loop featuring `BCEWithLogitsLoss` for multi-label logic, and a `ReduceLROnPlateau` scheduler.
-* **`evaluate.py` & `predict.py`**: Standalone scoring and inference scripts.
+## 🗂️ Project Directory & File Structure
+The codebase is strictly modular to enforce clean engineering practices and separate concerns. Here is exactly what is inside this stage:
+
+### 📄 Core Code Files
+* **`config.py`**: The single source of truth. Contains dynamic `pathlib` paths, `TRAIN_MODE="subset"`, learning rates, epochs (15), and the `128x128` resolution toggle.
+* **`dataset.py`**: A memory-efficient custom PyTorch `Dataset`. It maps the text annotations to tensors and loads images **one by one** from the disk (via PIL) only when `__getitem__` is called, rather than holding 50k tensors in RAM. Implements simple horizontal flipping.
+* **`model.py`**: Defines the `SimpleCNN_CPU` architecture, the pooling layers, and the Kaiming Normal weight initialization logic.
+* **`train.py`**: The central training loop. It features PyTorch's `BCEWithLogitsLoss` for multi-label logic, tracking loss/accuracy, and applies the `ReduceLROnPlateau` scheduler.
+* **`evaluate.py`**: A standalone script used to test a saved model strictly on the official CelebA validation split to get isolated precision/recall metrics.
+* **`predict.py`**: A deployment script to test the model on unseen raw `.jpg` files locally.
+* **`utils.py`**: Contains helper functions for cleanly plotting and saving matplotlib graphs.
+* **`preflight.py`**: A sanity-check script to verify your CUDA/CPU environment and dataset paths are valid before starting a 5-hour training run.
+* **`requirements.txt`**: The `pip` dependencies specifically required for this stage.
+
+### 📁 Generated Output Directories
+* **`checkpoints/`**: The directory dedicated to storing model weight snapshots during training.
+  * `best_model_stage1.pth` (4.59 MB): This is the absolute best performing model throughout the entire 15 epoch run based on the lowest Validation Loss. What makes this file larger than raw weights is that it stores the entire dictionary state (`state_dict`) of both the CNN parameters *and* the `Adam` optimizer's momentum buffers.
+  * `checkpoint_latest.pth` (4.59 MB): A crash-recovery save file. It simply stores the exact state of the network at the very end of the most recently completed epoch.
+* **`outputs/`**: A programmatic logging directory generated automatically during training by `utils.py`.
+  * `training_log.csv`: A permanent record of epoch progress. It contains tabulated columns for `Epoch, Train Loss, Val Loss, Accuracy, F1 Score, Precision, Recall, Time`.
+  * `training_summary.txt`: A clean text readout of the run (verifying the 5 hour 6 minute completion time, and pointing to epoch 14 as the best iteration).
+  * `loss_curve.png` & `accuracy_curve.png`: Matplotlib charts graphing the training vs. validation metrics over time, proving that the model was smoothly converging without severe overfitting.
 
 ## 📊 Results and Limitations
 Training took **5 hours, 6 minutes, and 32 seconds** to run for 15 epochs. 
