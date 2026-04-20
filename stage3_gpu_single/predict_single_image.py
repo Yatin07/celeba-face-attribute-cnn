@@ -6,6 +6,7 @@
 import os
 import sys
 import warnings
+from pathlib import Path
 warnings.filterwarnings('ignore')
 
 import numpy as np
@@ -19,6 +20,7 @@ import torch.nn as nn
 # CONFIGURATION - MUST MATCH TRAINING
 # =============================================================================
 
+BASE_DIR = Path(__file__).resolve().parent
 IMAGE_SIZE = 160
 NUM_ATTRS = 40
 DROPOUT = 0.4
@@ -172,8 +174,11 @@ def predict_image(model, image_path, threshold=0.4):
     print('[INFO] Running inference...')
     model.eval()
     with torch.no_grad():
-        with torch.amp.autocast(device_type='cuda' if device.type == 'cuda' else 'cpu'):
-            outputs = model(img_tensor)
+        if device.type == 'cuda':
+             with torch.amp.autocast(device_type='cuda'):
+                 outputs = model(img_tensor)
+        else:
+             outputs = model(img_tensor)
     
     # Get probabilities
     probs = torch.sigmoid(outputs).float().cpu().numpy()[0]
@@ -245,7 +250,9 @@ def predict_image(model, image_path, threshold=0.4):
     
     # Save plot
     output_name = os.path.splitext(os.path.basename(image_path))[0]
-    plot_path = f'outputs/prediction_{output_name}.png'
+    output_dir = BASE_DIR / "outputs"
+    output_dir.mkdir(exist_ok=True)
+    plot_path = str(output_dir / f'prediction_{output_name}.png')
     plt.savefig(plot_path, dpi=150, bbox_inches='tight')
     print(f'\n[SAVED] Prediction visualization: {plot_path}')
     
@@ -256,7 +263,7 @@ def predict_image(model, image_path, threshold=0.4):
 
 def load_model():
     """Load trained model from checkpoint."""
-    checkpoint_path = 'checkpoints/best_model_gpu.pth'
+    checkpoint_path = str(BASE_DIR / 'checkpoints' / 'best_model_gpu.pth')
     print(f'[INFO] Loading model from: {checkpoint_path}')
     
     if not os.path.exists(checkpoint_path):
@@ -283,9 +290,6 @@ def main():
         sys.exit(1)
     
     image_path = sys.argv[1]
-    
-    # Create outputs directory
-    os.makedirs('outputs', exist_ok=True)
     
     # Load model (always uses best_model_gpu.pth)
     model = load_model()
