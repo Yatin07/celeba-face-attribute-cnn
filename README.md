@@ -47,7 +47,7 @@ celeba-journey-cpu-to-gpu/
   * **LR Warmup**: Wrote a custom linear 3-epoch warmup scheduling block to prevent gradient explosions.
   * **Data Augmentation**: Built a dynamic `PIL` engine applying randomized Flips, Brightness, Contrast, and Rotations per epoch.
   * **Threshold Math**: Algorithmically scanned the validation probabilities and lowered the Sigmoid activation threshold from `0.50` to an empirically proven F1-optimal `0.40`.
-* **The Result**: A flawless inference engine. The Stage 3 model correctly identifies incredibly subtle attributes (*Receding Hairlines*, *Bags Under Eyes*, *Heavy Makeup*) without hallucinating false positives.
+* **The Result**: A flawless inference engine. The Stage 3 model correctly identifies incredibly subtle attributes (*Receding Hairlines*, *Bags Under Eyes*, *Heavy Makeup*) without hallucinating false positives. We then deployed this model into a **Gradio Web UI** (`app.py`) for real-time interactive predictions.
 
 ---
 
@@ -76,7 +76,7 @@ You can dynamically evaluate all checkpoints compiled across this project's life
 | **Dwayne Johnson** (Bald) | 5/5 expected | 3/5 expected | **5/5 expected** *(18 attrs total)* |
 | **Shraddha Kapoor** (Makeup) | 6/6 expected | 5/6 expected | **6/6 expected** *(19 attrs total)* |
 | **Older Bald Male** | 4/5 expected | 1/5 expected ❌ | **5/5 expected** *(11 attrs total)* |
-| **MY IMAGE** | 5/7 expected | 7/7 expected | **7/7 expected** *(16 attrs total)* |
+| **Young Indian Male** | 5/7 expected | 7/7 expected | **7/7 expected** *(16 attrs total)* |
 
 > **Key Takeaway:** You can clearly see Stage 2's conservative flaw (missing that the older man was bald entirely!). Stage 3 completely remedies this through `AdamW` and heavy data augmentation, catching every single expected attribute perfectly.
 
@@ -104,3 +104,11 @@ If you want to train the final mastery model from scratch on your own GPU:
 python stage3_gpu_single/celeba_full_gpu_training.py
 ```
 *(Optionally: You can also open the `CelebA_Training_Notebook.ipynb` in that same folder to read a cell-by-cell breakdown of the whole architecture).*
+
+### 4. Deploy the Web UI
+Want to test the model on your own face? Stage 3 includes a polished Gradio Web UI.
+```bash
+pip install gradio
+python stage3_gpu_single/app.py
+```
+*This will launch a local server at `http://127.0.0.1:7860`. You can upload any image and see a dynamic 40-attribute bar chart generated in real time.*
