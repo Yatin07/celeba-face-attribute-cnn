@@ -1,39 +1,142 @@
-# Stage 3: Single-File GPU Optimization (The Final Pipeline) 🏆
+# CelebA Local Training Pipeline — README
 
-This directory contains the ultimate iteration of the project. Having diagnosed the "conservative prediction" flaw in Stage 2, Stage 3 focuses on algorithmic optimizations, data augmentation, and threshold mathematics to extract the absolute maximum nuance from the CNN.
+## Project Overview
 
-## 🎯 Objective
-To fix the recall issues, to make the model deeply perceptive of rare attributes, and to refactor the entire, sprawling modular codebase into a single, clean, easily reproducible `Python` script and `Jupyter Notebook`.
+A complete, CPU-friendly deep learning pipeline to train a CNN from scratch
+on the CelebA dataset for 40-attribute multi-label classification.
 
-## 🧠 Algorithmic Optimizations Introduced
+---
 
-### 1. The AdamW Optimizer
-We ripped out standard `Adam` and replaced it with `AdamW` (`torch.optim.AdamW`). Multi-label classification on imbalanced datasets easily leads to overfitting on common classes. AdamW enforces decoupled weight decay, acting as a strict regularizer to force the network to learn generalized features rather than memorizing noise.
+## Project Structure
 
-### 2. Learning Rate Warmup
-Training deep networks on large batch sizes can cause massive gradient spikes in the first epoch that ruin the randomly initialized weights. We wrote a custom scheduler block that starts the `INITIAL_LR` at `0.3 × base_lr` and linearly scales it up over the first 3 epochs before handling control back to the `ReduceLROnPlateau` scheduler.
-
-### 3. PIL Data Augmentation Pipeline
-In Stage 1 & 2, we only used a 50% chance of a horizontal flip. This was not enough to prevent memorization. We built a native `augment_image()` function using Pillow (`ImageEnhance`) that applies:
-* Random Flips (p=0.5)
-* Dynamic Brightness (`0.8` to `1.2` multiplier)
-* Dynamic Contrast (`0.8` to `1.2` multiplier)
-* Small angle Rotations (`-10` to `+10` degrees)
-This guarantees the model almost never sees the exact same image pixels twice across its 20 epochs.
-
-### 4. Dynamic Threshold Tuning
-By default, PyTorch forces binary classification by assuming a sigmoid probability `> 0.50` is a `Yes` and `< 0.50` is a `No`. We algorithmically evaluated the raw tensor probabilities on the validation set against thresholds from `0.30` to `0.55` and discovered empirically that a threshold of **`0.40`** maximized the F1 Harmonic Mean Score without breaking precision.
-
-## 🗂️ The Single-File consolidation
-Instead of juggling 5 different Python scripts, everything was merged into `celeba_full_gpu_training.py` (and perfectly documented cell-by-cell in `CelebA_Training_Notebook.ipynb`). 
-* The `checkpoints/best_model_gpu.pth` only saves the `model.state_dict()` taking up a lean `3.72 MB` instead of `11.15 MB`.
-* Prediction tensors (`.npy`) are automatically dumped to `outputs/` for future offline graphing.
-
-## 📊 Final Results
-The results speak for themselves. In the global `compare_all_models.py` benchmark, Stage 3 absolutely demolished the previous models. It accurately tags up to 16 out of 16 expected attributes on totally unseen images, correctly registering *5 o' Clock Shadows*, *Heavy Makeup*, *Sideburns*, and *Receding Hairlines* that the Stage 2 GPU model completely ignored.
-
-## 🚀 How to Run
-Ensure `IMAGE_DIR` on line 28 of `celeba_full_gpu_training.py` (or inside the notebook) points to your active image directory.
-```bash
-python celeba_full_gpu_training.py
 ```
+C:\MLA\CelebA_Local\
+│
+├── config.py        ← All settings (paths, modes, hyperparams)
+├── dataset.py       ← Data loading + PyTorch Dataset/DataLoaders
+├── model.py         ← SimpleCNN architecture (4 conv blocks, ~400K params)
+├── train.py         ← Training loop (early stopping, checkpointing)
+├── evaluate.py      ← Test evaluation (loss, accuracy, F1, per-label)
+├── predict.py       ← Single-image inference with confidence scores
+├── utils.py         ← Metrics, plots, checkpoint helpers
+├── requirements.txt ← Python dependencies
+│
+├── checkpoints/
+│   ├── checkpoint_latest.pth      ← Saved every epoch (for crash recovery)
+│   ├── best_model_stage1.pth      ← Best model from 50k training
+│   └── best_model_stage2.pth      ← Best model from full 162k training
+│
+└── outputs/
+    ├── loss_curve.png             ← Train vs Val loss plot
+    └── accuracy_curve.png         ← Validation accuracy plot
+```
+
+---
+
+## Dataset Required
+
+```
+C:\MLA\celeba\
+├── img_align_celeba\        ← 202,599 face images (.jpg)
+├── list_attr_celeba.txt     ← 40 attribute labels per image
+└── list_eval_partition.txt  ← Official train/val/test split
+```
+
+---
+
+## Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## How to Run
+
+### Stage 1 — Train on 50k images
+
+In `config.py`:
+```python
+TRAIN_MODE      = "subset"
+RESUME_TRAINING = False
+```
+
+```bash
+python train.py
+```
+
+### Evaluate on test set
+
+```bash
+python evaluate.py
+```
+
+### Predict attributes for a single image
+
+```bash
+python predict.py --image path\to\face.jpg
+python predict.py --image path\to\face.jpg --topk 10
+```
+
+---
+
+## Stage 2: Continue Training on Full Dataset
+
+After Stage 1 is complete, update `config.py`:
+```python
+TRAIN_MODE      = "full"
+RESUME_TRAINING = True
+```
+
+Run:
+```bash
+python train.py
+```
+
+This loads `best_model_stage1.pth`, reduces LR to 0.0001, and saves the best result as `best_model_stage2.pth`.
+
+---
+
+## Architecture: SimpleCNN (~400K parameters)
+
+```
+Input  : (B, 3, 128, 128)
+
+Block 1: Conv(3→32)   + BN + ReLU + MaxPool → (B,  32, 64, 64)
+Block 2: Conv(32→64)  + BN + ReLU + MaxPool → (B,  64, 32, 32)
+Block 3: Conv(64→128) + BN + ReLU + MaxPool → (B, 128, 16, 16)
+Block 4: Conv(128→256)+ BN + ReLU + MaxPool → (B, 256,  8,  8)
+
+GlobalAvgPool                               → (B, 256)
+Dropout(0.4)
+FC(256 → 40)                                → (B, 40) raw logits
+```
+
+---
+
+## Key Config Parameters
+
+| Parameter | Value | Reason |
+|---|---|---|
+| IMAGE_SIZE | 128 | Standard for CelebA |
+| BATCH_SIZE | 64 | Good for CPU RAM |
+| NUM_WORKERS | 0 | Stable on Windows CPU |
+| PIN_MEMORY | False | No GPU |
+| EPOCHS | 15 | Max (early stopping applies) |
+| PATIENCE | 3 | Stop after 3 no-improvement epochs |
+| LEARNING_RATE | 0.001 | Adam default |
+| RESUME_LR | 0.0001 | Reduced for Stage 2 |
+| DROPOUT | 0.4 | Prevents overfitting |
+
+---
+
+## Time Estimate (Intel Iris CPU)
+
+| Phase | Per Epoch | Total (15 epochs) |
+|---|---|---|
+| Training (50k images) | ~15–25 min | ~5–8 hours |
+| Validation (~20k images) | ~5–8 min | per epoch |
+| Test evaluation | — | ~10 min (once) |
+
+> Training runs overnight. Early stopping usually triggers before epoch 15.
