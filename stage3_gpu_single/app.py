@@ -5,6 +5,7 @@
 
 import os
 import warnings
+from pathlib import Path
 warnings.filterwarnings('ignore')
 
 import numpy as np
@@ -17,6 +18,7 @@ import gradio as gr
 # CONFIGURATION
 # =============================================================================
 
+BASE_DIR = Path(__file__).resolve().parent
 IMAGE_SIZE = 160
 NUM_ATTRS = 40
 DROPOUT = 0.4
@@ -121,17 +123,17 @@ class SimpleCNN(nn.Module):
 
 def load_model():
     model = SimpleCNN(num_classes=NUM_ATTRS, dropout=DROPOUT).to(device)
-    checkpoint_path = 'checkpoints/best_model_gpu.pth'
+    checkpoint_path = str(BASE_DIR / 'checkpoints' / 'best_model_gpu.pth')
     
     if not os.path.exists(checkpoint_path):
-        checkpoint_path = 'checkpoints/last_model_gpu.pth'
+        checkpoint_path = str(BASE_DIR / 'checkpoints' / 'last_model_gpu.pth')
     
     if os.path.exists(checkpoint_path):
         model.load_state_dict(torch.load(checkpoint_path, map_location=device))
         model.eval()
         return model, os.path.basename(checkpoint_path)
     else:
-        raise FileNotFoundError("No model checkpoint found in checkpoints/")
+        raise FileNotFoundError(f"No model checkpoint found in {BASE_DIR / 'checkpoints'}")
 
 
 model, model_name = load_model()
@@ -163,8 +165,11 @@ def predict_image(input_image):
     
     # Predict
     with torch.no_grad():
-        with torch.amp.autocast(device_type='cuda' if device.type == 'cuda' else 'cpu'):
-            outputs = model(tensor)
+        if device.type == 'cuda':
+             with torch.amp.autocast(device_type='cuda'):
+                 outputs = model(tensor)
+        else:
+             outputs = model(tensor)
     
     # Get probabilities
     probs = torch.sigmoid(outputs).float().cpu().numpy()[0]
@@ -225,8 +230,9 @@ def predict_image(input_image):
     plt.tight_layout()
     
     # Save to temp file
-    temp_path = 'outputs/temp_prediction.png'
-    os.makedirs('outputs', exist_ok=True)
+    output_dir = BASE_DIR / 'outputs'
+    output_dir.mkdir(exist_ok=True)
+    temp_path = str(output_dir / 'temp_prediction.png')
     plt.savefig(temp_path, dpi=150, bbox_inches='tight')
     plt.close()
     
